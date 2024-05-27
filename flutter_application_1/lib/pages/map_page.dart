@@ -16,10 +16,10 @@ import 'dart:convert';
 import 'package:flutter_application_1/pages/stopwatchoverlay.dart';
 import 'fillup_page.dart';
 
-double totalDistance = 0.0;
+double totalDistance = 0.0; //global variables
 bool _dialogShown = false;
 
-typedef OnCoordinatesFetched = void Function(
+typedef OnCoordinatesFetched = void Function( //#7 stores
     LatLng startLocation, LatLng endLocation);
 
 class TaxiBuddyHomePage extends StatefulWidget {
@@ -42,7 +42,7 @@ class _TaxiBuddyHomePageState extends State<TaxiBuddyHomePage> {
     super.initState();
     _tabViews = <Widget>[
       SearchLocationScreen(
-        onCoordinatesFetched: (startLocation, endLocation) {
+        onCoordinatesFetched: (startLocation, endLocation) {//#8 changes the marker
           setState(() {
             _tabViews[1] =
                 MapPage(startLocation: startLocation, endLocation: endLocation);
@@ -50,7 +50,7 @@ class _TaxiBuddyHomePageState extends State<TaxiBuddyHomePage> {
         },
       ),
       const MapPage(
-          startLocation: LatLng(10.738175, 122.541184),
+          startLocation: LatLng(10.738175, 122.541184), //default location
           endLocation: LatLng(10.713898, 122.552384)),
     ];
   }
@@ -145,19 +145,18 @@ class _TaxiBuddyHomePageState extends State<TaxiBuddyHomePage> {
     );
   }
 }
-
-class LocationUtils {
+//wiegand
+class LocationUtils {  //#6 retrieve coordinates from google api
   static Future<LatLng?> getCoordinates(
       TextEditingController controller) async {
     final address = controller.text;
-    const apiKey = GOOGLE_MAPS_API_KEY;
     final url =
-        'https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=$apiKey';
+        'https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=$GOOGLE_MAPS_API_KEY';
 
     final response = await http.get(Uri.parse(url));
 
-    if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
+    if (response.statusCode == 200) { // success
+      final jsonData = jsonDecode(response.body); 
       final lat = jsonData['results'][0]['geometry']['location']['lat'];
       final lng = jsonData['results'][0]['geometry']['location']['lng'];
 
@@ -167,7 +166,7 @@ class LocationUtils {
     }
   }
 
-  static Future<LatLng?> getCoordinatesFromGoogleMaps(String address) async {
+  static Future<LatLng?> getCoordinatesFromGoogleMaps(String address) async { //# convert text to LatLng
     const apiKey = GOOGLE_MAPS_API_KEY;
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=$apiKey';
@@ -186,7 +185,7 @@ class LocationUtils {
   }
 }
 
-class SearchLocationScreen extends StatefulWidget {
+class SearchLocationScreen extends StatefulWidget { 
   final OnCoordinatesFetched onCoordinatesFetched;
 
   const SearchLocationScreen({super.key, required this.onCoordinatesFetched});
@@ -201,7 +200,7 @@ class _SearchLocationScreenState extends State<SearchLocationScreen> {
   List<AutocompletePrediction> destinationPlacePredictions = [];
   TextEditingController startingLocationController = TextEditingController();
   TextEditingController destinationLocationController = TextEditingController();
-  LatLng? startingCoordinates;
+  LatLng? startingCoordinates; 
   LatLng? destinationCoordinates;
 
   final OnCoordinatesFetched onCoordinatesFetched;
@@ -217,7 +216,7 @@ class _SearchLocationScreenState extends State<SearchLocationScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(16.0),
-                child: TextFormField(
+                child: TextFormField(   //start  input field #1
                   controller: startingLocationController,
                   onChanged: (value) {
                     if (value.isNotEmpty) {
@@ -240,7 +239,7 @@ class _SearchLocationScreenState extends State<SearchLocationScreen> {
               ),
               Container(
                 padding: const EdgeInsets.all(16.0),
-                child: TextFormField(
+                child: TextFormField(  // destination input field
                   controller: destinationLocationController,
                   onChanged: (value) {
                     if (value.isNotEmpty) {
@@ -285,7 +284,7 @@ class _SearchLocationScreenState extends State<SearchLocationScreen> {
                       );
                     }
                   },
-                  child: const Text('Get Coordinates'),
+                  child: const Text('Get Coordinates'), // #5 press
                 ),
               ),
               Container(
@@ -335,7 +334,7 @@ class _SearchLocationScreenState extends State<SearchLocationScreen> {
     );
   }
 
-  void placeAutoComplate(String query) async {
+  void placeAutoComplate(String query) async { // #2 for start
     Uri uri = Uri.https(
       "maps.googleapis.com",
       'maps/api/place/autocomplete/json',
@@ -347,12 +346,12 @@ class _SearchLocationScreenState extends State<SearchLocationScreen> {
     );
     String? response = await NetworkUtility.fetchUrl(uri);
 
-    if (response != null) {
+    if (response != null) {   //#3 the results ++ to []
       PlaceAutocompleteResponse result =
           PlaceAutocompleteResponse.parseAutocompleteResult(response);
       if (result.predictions != null) {
         setState(() {
-          placePredictions = result.predictions!;
+          placePredictions = result.predictions!; 
         });
       }
     }
@@ -381,16 +380,16 @@ class _SearchLocationScreenState extends State<SearchLocationScreen> {
     }
   }
 
-  void selectLocation(String location, bool isStartingLocation) {
+  void selectLocation(String location, bool isStartingLocation) { // #4 updates the ui
     setState(() {
       if (isStartingLocation) {
         startingLocationController.text = location;
         print(location);
-        placePredictions = [];
+        placePredictions = []; //clear
       } else {
         destinationLocationController.text = location;
         print(location);
-        destinationPlacePredictions = [];
+        destinationPlacePredictions = []; //clear
       }
     });
   }
@@ -423,8 +422,7 @@ class _MapPageState extends State<MapPage> {
 
   final MarkerId _currentLocationMarkerId = const MarkerId("_currentLocation");
   final MarkerId _sourceLocationMarkerId = const MarkerId("_sourceLocation");
-  final MarkerId _destinationLocationMarkerId =
-      const MarkerId("_destinationLocation");
+  final MarkerId _destinationLocationMarkerId = const MarkerId("_destinationLocation");
 
   @override
   void initState() {
@@ -450,14 +448,14 @@ class _MapPageState extends State<MapPage> {
           initialCameraPosition:
               CameraPosition(target: startLocation, zoom: 12),
           markers: Set<Marker>.of(markers.values),
-          polylines: Set<Polyline>.of(polylines.values),
+          polylines: Set<Polyline>.of(polylines.values), // to have unique values only
         ),
         const Positioned(
           bottom: 0,
           left: 0,
           right: 60,
           child: Opacity(
-            opacity: 0.8, // Set the opacity value as needed
+            opacity: 0.8, 
             child: StopwatchOverlay(),
           ),
         ),
@@ -522,14 +520,14 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  Future<List<LatLng>> getPolylinePoints() async {
-    List<LatLng> polylineCoordinates = [];
-    PolylinePoints polylinePoints = PolylinePoints();
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+  Future<List<LatLng>> getPolylinePoints() async { // #9 api will do the work for the points
+    List<LatLng> polylineCoordinates = [];   
+    PolylinePoints polylinePoints = PolylinePoints(); //new instance
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates( // 10 polylines between coordinate 
       GOOGLE_MAPS_API_KEY,
-      PointLatLng(startLocation.latitude, startLocation.longitude), // ORIGIN
+      PointLatLng(startLocation.latitude, startLocation.longitude), // START
       PointLatLng(endLocation.latitude, endLocation.longitude), // DESTINATION
-      travelMode: TravelMode.driving,
+      travelMode: TravelMode.driving,  // driving api profile
     );
     if (result.points.isNotEmpty) {
       totalDistance = 0;
@@ -540,7 +538,7 @@ class _MapPageState extends State<MapPage> {
       print(result.errorMessage);
     }
 
-    if (totalDistance == 0) {
+    if (totalDistance == 0) { // #14 this is where the total distance gets calculated
       for (var i = 0; i < polylineCoordinates.length - 1; i++) {
         totalDistance += calculateDistance(
             polylineCoordinates[i], polylineCoordinates[i + 1]);
@@ -551,19 +549,19 @@ class _MapPageState extends State<MapPage> {
     return polylineCoordinates;
   }
 
-  void generatePolyLineFromPoints(List<LatLng> polylineCoordinates) async {
+  void generatePolyLineFromPoints(List<LatLng> polylineCoordinates) async { // #11 polylines
     PolylineId id = const PolylineId("poly");
     Polyline polyline = Polyline(
         polylineId: id,
         color: Colors.blue,
         points: polylineCoordinates,
         width: 7);
-    setState(() {
+    setState(() {//#12 displays the polylines
       polylines[id] = polyline;
     });
   }
 
-  double calculateDistance(LatLng point1, LatLng point2) {
+  double calculateDistance(LatLng point1, LatLng point2) { // #13 measures the distance 
     var lat1 = point1.latitude;
     var lon1 = point1.longitude;
     var lat2 = point2.latitude;
@@ -593,6 +591,7 @@ class _MapPageState extends State<MapPage> {
       showDialog(
         context: context,
         builder: (BuildContext context) {
+
           _dialogShown = true;
           return AlertDialog(
             title: const Text("WARNING"),
