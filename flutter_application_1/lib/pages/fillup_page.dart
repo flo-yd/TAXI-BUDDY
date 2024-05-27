@@ -32,12 +32,28 @@ class _FillupState extends State<Fillup> {
         _selectedComplaint != null;
   }
 
+  // e check kun numbers lng
+  bool isPhoneNumberValid() {
+    return RegExp(r'^\d+$').hasMatch(phoneNumberController.text);
+  }
+
   void signUserUp() async {
     if (!areAllFieldsFilled()) {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please fill up all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!isPhoneNumberValid()) {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Phone number must be digits only'),
           backgroundColor: Colors.red,
         ),
       );
